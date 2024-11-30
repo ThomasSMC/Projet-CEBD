@@ -23,3 +23,11 @@ class Window(tk.Toplevel):
         # On définit les colonnes que l'on souhaite afficher dans la fenêtre et la requête
 
         # On utilise la fonction createTreeViewDisplayQuery pour afficher les résultats de la requête
+        columns = ('code_departement', 'nom_departement')
+        query = """SELECT code_departement, nom_departement
+                    FROM Departements 
+                    WHERE zone_climatique = 'H1'"""
+        tree = display.createTreeViewDisplayQuery(self, columns, query,200)
+        tree.grid(row=0, sticky="nswe")
+        
+
