@@ -24,3 +24,14 @@ class Window(tk.Toplevel):
         # On définit les colonnes que l'on souhaite afficher dans la fenêtre et la requête
 
         # On utilise la fonction createTreeViewDisplayQuery pour afficher les résultats de la requête
+        columns = ('zone_climatique', 'nom_departement', 'temperature_moy_max')
+        query = """WITH TEMPMOYDEP AS (
+                    SELECT code_departement, AVG(temperature_moy_mesure) as temperature_moy_dep
+                    FROM Mesures
+                    GROUP BY code_departement)
+                    SELECT zone_climatique, nom_departement, MAX(temperature_moy_dep) as temperature_moy_max
+                    FROM Departements JOIN TEMPMOYDEP USING (code_departement)
+                    GROUP BY zone_climatique"""
+
+        tree = display.createTreeViewDisplayQuery(self, columns, query,200)
+        tree.grid(row=0, sticky="nswe")
