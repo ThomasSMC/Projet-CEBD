@@ -88,6 +88,13 @@ CREATE TABLE PhotoVoltaique (
     CONSTRAINT fk_travaux_region FOREIGN KEY (code_region) REFERENCES Regions(code_region) ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
+CREATE TABLE Travaux (
+    departement TEXT NOT NULL,
+    travaux TEXT NOT NULL,
+    CONSTRAINT pk_travaux PRIMARY KEY (departement, travaux)
+);
+
+
 
 
 
