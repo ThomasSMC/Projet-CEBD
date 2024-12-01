@@ -10,13 +10,6 @@ class Window(tk.Toplevel):
         display.centerWindow(600, 400, self)
         self.title('Q1 : départements de la zone climatique H1')
         display.defineGridDisplay(self, 2, 1)
-        ttk.Label(self,
-                  text="Modifier cette fonction en s'inspirant du code de F1, pour qu'elle affiche la liste des "
-                       "départements (code_departement, nom_departement) de la zone climatique H1",
-                  wraplength=500,
-                  anchor="center",
-                  font=('Helvetica', '10', 'bold')
-                  ).grid(sticky="we", row=0)
 
         #TODO Q1 Modifier la suite du code (en se basant sur le code de F1) pour répondre à Q1
 
