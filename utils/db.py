@@ -3,6 +3,7 @@ from sqlite3 import IntegrityError
 import pandas
 
 # Pointeur sur la base de données
+
 data = sqlite3.connect("data/climat_france.db")
 data.execute("PRAGMA foreign_keys = 1")
 
@@ -90,6 +91,59 @@ def insertDB():
              "data/csv/Mesures.csv", ';',
              "insert into Mesures values (?, ?, ?, ?, ?)",
              ['code_insee_departement', 'date_obs', 'tmin', 'tmax', 'tmoy']
+        )
+
+        print("Les erreurs UNIQUE constraint sont normales car on insère une seule fois")
+        print("Insertion de communes en cours...cela peut prendre un peu de temps")
+
+        #Q4
+        #On ajoute les communes
+        read_csv_file(
+            "data/csv/Communes.csv", ';',
+            "insert into Communes (code_commune, nom_commune, statut_commune, altitude_Moy, population_commune, superficie_commune, code_canton, code_departement, code_arrondissement) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ['Code Commune', 'Commune', 'Statut', 'Altitude Moyenne', 'Population', 'Superficie', 'Code Canton', 'Code Département', 'Code Arrondissement']
+        )
+
+        print("Les erreurs UNIQUE constraint sont normales car on insère une seule fois")
+        print("Insertion d'isolation en cours...cela peut prendre un peu de temps")
+
+        #On ajoute dans les isolations
+       
+        read_csv_file(
+            "data/csv/Isolation.csv", ';',
+            """
+            insert into Isolation (cout_total_ht, cout_induit_ht, annee, type_logement, annee_construction, code_region, code_departement, poste, isolant, epaisseur, surface)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ['cout_total_ht', 'cout_induit_ht', 'annee_travaux', 'type_logement', 'annee_construction', 'code_region', 'code_departement', 'poste_isolation', 'isolant', 'epaisseur', 'surface']
+        )
+
+        print("Les erreurs UNIQUE constraint sont normales car on insère une seule fois les isolations")
+        print("Insertion de chauffages en cours...cela peut prendre un peu de temps")
+
+        #On ajoute dans les chauffages
+
+        read_csv_file(
+            "data/csv/Chauffage.csv", ';',
+            """
+            insert into Chauffage (cout_total_ht, cout_induit_ht, annee, type_logement, annee_construction, code_region, code_departement, energie_avt_trav, energie_installe, generateur, type_chaudiere)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ['cout_total_ht', 'cout_induit_ht', 'annee_travaux', 'type_logement', 'annee_construction', 'code_region', 'code_departement', 'energie_chauffage_avt_travaux', 'energie_chauffage_installee', 'generateur', 'type_chaudiere']
+        )
+
+        print("Les erreurs UNIQUE constraint sont normales car on insère une seule fois les chauffages")
+        print("Insertion de photovoltaique en cours...cela peut prendre un peu de temps")
+
+        #On ajoute dans les Photovoltaiques
+        
+        read_csv_file(
+            "data/csv/Photovoltaique.csv", ';',
+            """
+            insert into PhotoVoltaique (cout_total_ht, cout_induit_ht, annee, type_logement, annee_construction, code_region, code_departement, puissance, type_panneaux)
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            ['cout_total_ht', 'cout_induit_ht', 'annee_travaux', 'type_logement', 'annee_construction', 'code_region', 'code_departement', 'puissance_installee', 'type_panneaux']
         )
 
     except Exception as e:

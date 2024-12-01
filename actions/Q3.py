@@ -15,88 +15,72 @@ class Window(tk.Toplevel):
 
         # Définition de la taille de la fenêtre et des lignes/colonnes
         display.centerWindow(600, 450, self)
-        self.title('Q3 : nombre de mesures prises et moyenne des temperatures [...] (version dynamique)')
+        self.title('Q3 : nombre de mesures prises et moyenne des températures [...] (version dynamique)')
         display.defineGridDisplay(self, 3, 3)
-        self.grid_rowconfigure(3, weight=10) #On donne un poids plus important à la dernière ligne pour l'affichage du tableau
-        ttk.Label(self,
-                  text="On a repris le code de F2. Modifier l'interface pour proposer un choix de la région sans "
-                       "saisie manuelle (par exemple un proposer un menu déroulant avec les valeurs extraites de la "
-                       "base, ou toute autre idée). Changez la requête fournie pour afficher le nombre de mesures prises"
-                       " et la moyenne des températures moyennes par département pour la région choisie.",
-                  wraplength=500,
-                  anchor="center",
-                  font=('Helvetica', '10', 'bold')
-                  ).grid(sticky="we", row=0,columnspan=3)
+        self.grid_rowconfigure(3, weight=10)  # Poids plus important pour afficher le tableau
+        # Affichage du label, du Combobox et du bouton valider
+        ttk.Label(self, text='Veuillez indiquer une région :', anchor="center", font=('Helvetica', '10', 'bold')).grid(row=1, column=0)
 
-        # Affichage du label, de la case de saisie et du bouton valider
-        ttk.Label(self,
-                  text='Veuillez indiquer une région :',
-                  anchor="center",
-                  font=('Helvetica', '10', 'bold')
-                  ).grid(row=1, column=0)
-        #TODO Q3 C'est cette partie que l'on souhaite changer pour un choix dynamique de la région
-        self.input = ttk.Entry(self)
+        # Création du Combobox pour la sélection dynamique de la région
+        self.input = ttk.Combobox(self, state="readonly")
         self.input.grid(row=1, column=1)
-        self.input.bind('<Return>', self.searchRegion) # On bind l'appui de la touche entrée sur la case de saisie, on peut donc utiliser soit la touche entrée soit le bouton valider
-        ttk.Button(self,
-                   text='Valider',
-                   command=self.searchRegion
-                   ).grid(row=1, column=2)
+        self.input.bind('<Return>', self.searchRegion)  # Bind Entrée
+        ttk.Button(self, text='Valider', command=self.searchRegion).grid(row=1, column=2)
 
-        # On place un label sans texte, il servira à afficher les erreurs
+        # Affichage d'un label pour les erreurs
         self.errorLabel = ttk.Label(self, anchor="center", font=('Helvetica', '10', 'bold'))
         self.errorLabel.grid(columnspan=3, row=2, sticky="we")
 
-        # On prépare un treeView vide pour l'affichage de nos résultats
-        columns = ('code_departement', 'nom_departement','num_mesures','moy_temp_moyenne')
+        # Création d'un TreeView vide pour afficher les résultats
+        columns = ('code_departement', 'nom_departement', 'num_mesures', 'moy_temp_moyenne')
         self.treeView = ttk.Treeview(self, columns=columns, show='headings')
         for column in columns:
             self.treeView.column(column, anchor=tk.CENTER, width=15)
             self.treeView.heading(column, text=column)
         self.treeView.grid(columnspan=3, row=3, sticky='nswe')
 
-    # Fonction qui récupère la valeur saisie, exécute la requête et affiche les résultats
-    # La fonction prend un argument optionnel event car elle peut être appelée de deux manières :
-    # Soit via le bouton Valider, dans ce cas aucun event n'est fourni
-    # Soit via le bind qui a été fait sur la case de saisie quand on appuie sur Entrée, dans ce cas bind fournit un event (que l'on utilise pas ici)
-    # TODO Q3 Modifier la fonction searchRegion pour un choix dynamique de la région
-    def searchRegion(self, event = None):
+        # On remplit le Combobox avec les régions disponibles
+        cursor = db.data.cursor()
+        cursor.execute("SELECT DISTINCT nom_region FROM Regions")  # Récupère toutes les régions
+        regions = cursor.fetchall()
+        region_names = [region[0] for region in regions]
+        self.input['values'] = region_names
 
-        # On vide le treeView (pour rafraichir les données si quelque chose était déjà présent)
+    def searchRegion(self, event=None):
+    # On vide le Treeview
         self.treeView.delete(*self.treeView.get_children())
 
-        # On récupère la valeur saisie dans la case
+    # On récupère la région sélectionnée
         region = self.input.get()
 
-        # Si la saisie est vide, on affiche une erreur
+    # Si aucune région n'est sélectionnée, on affiche une erreur
         if len(region) == 0:
-            self.errorLabel.config(foreground='red', text="Veuillez saisir une région !")
-
-        # Si la saisie contient quelque chose
-        else :
-
-            # On essai d'exécuter notre requête
+          self.errorLabel.config(foreground='red', text="Veuillez sélectionner une région !")
+        else:
             try:
                 cursor = db.data.cursor()
-                result = cursor.execute("""SELECT code_departement, nom_departement, 1, 1
-                                            FROM Departements JOIN Regions USING (code_region)
-                                            WHERE nom_region = ?
-                                            ORDER BY code_departement""", [region])
+                result = cursor.execute("""
+                SELECT d.code_departement, d.nom_departement, COUNT(m.code_departement) AS num_mesures, AVG(m.temperature_moy_mesure) AS moy_temp_moyenne
+                FROM Departements d
+                LEFT JOIN Mesures m ON d.code_departement = m.code_departement
+                JOIN Regions r ON d.code_region = r.code_region
+                WHERE r.nom_region = ?
+                GROUP BY d.code_departement
+                ORDER BY d.code_departement
+            """, [region])
 
-            # S'il y a une erreur, on l'affiche à l'utilisateur
             except Exception as e:
+            # Si une exception est levée, on l'affiche dans l'interface utilisateur
                 self.errorLabel.config(foreground='red', text="Erreur : " + repr(e))
-
-            # Si tout s'est bien passé
             else:
+            # Si la requête s'est bien exécutée, on insère les résultats dans le Treeview
+              i = 0
+              for row in result:
+                self.treeView.insert('', tk.END, values=row)
+                i += 1
 
-                # On affiche les résultats de la requête dans le tableau
-                i = 0
-                for row in result:
-                    self.treeView.insert('', tk.END, values=row)
-                    i += 1
-                # On affiche un message à l'utilisateur en fonction du nombre de résultats de la requête
-                if i == 0:
-                    self.errorLabel.config(foreground='orange', text="Aucun résultat pour la région \"" + region + "\" !")
-                else :
-                    self.errorLabel.config(foreground='green', text="Voici les résultats pour la région \"" + region + "\" :")
+            # Message de retour en fonction du nombre de résultats
+            if i == 0:
+                self.errorLabel.config(foreground='orange', text="Aucun résultat pour la région \"" + region + "\" !")
+            else:
+                self.errorLabel.config(foreground='green', text="Voici les résultats pour la région \"" + region + "\" :")
