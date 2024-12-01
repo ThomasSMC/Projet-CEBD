@@ -26,7 +26,7 @@ class App(tk.Tk):
         ttk.Button(self, text='Create DB', command=db.createDB).grid(column=0, row=1, pady=5)
         ttk.Button(self, text='Insert DB', command=db.insertDB).grid(column=1, row=1, pady=5)
         ttk.Button(self, text='Delete DB', command=db.deleteDB).grid(column=2, row=1, pady=5)
-        ttk.Button(self, text='Consulter les données de la base', command=self.open_tableData_window).grid(columnspan=3, pady=5)
+        ttk.Button(self, text='Consulter les données de la base', command=self.open_tableData_window).grid(columnspan=7, pady=5)
 
         # Fonctions fournies
         ttk.Label(self, text='Fonctions fournies (ne pas modifier)', background='lightgrey',
